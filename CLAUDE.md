@@ -1,0 +1,116 @@
+# CLAUDE.md — long-term-memory
+
+## プロジェクト概要
+
+Claude Code / Claude Desktop のやりとりを SQLite + ベクトル DB に長期保存し、MCP ツール経由で検索・参照できるようにするシステム。
+
+- **言語:** Ruby 4.0.1（Python 絶対禁止）
+- **DB:** SQLite3 + sqlite-vec（FTS5 trigram + vec0 768次元）
+- **埋め込みモデル:** `mochiya98/ruri-v3-310m-onnx`（informers gem、ONNX、VECTOR_SIZE=768）
+- **MCP SDK:** `mcp` gem（modelcontextprotocol/ruby-sdk）
+- **テスト:** test-unit xUnit スタイル（t-wada スタイル TDD）
+
+---
+
+## 開発ルール
+
+### 言語・依存
+
+- Python（`python3`、`.py`、`pip`）絶対禁止
+- gems はプロジェクト配下に閉じる: `bundle config set --local path 'vendor/bundle'`
+- すべての Ruby コマンドは `bundle exec` 経由で実行する
+
+### TDD
+
+- Red → Green → Refactor の順を守る
+- テストファイルは絶対に削除しない
+- スタブは `StubEmbedder`（`test/test_helper.rb`）を使い、実モデルをテストで起動しない
+
+### git
+
+- conventional commits スタイル（`feat:` / `fix:` / `test:` / `chore:` / `docs:`）
+- コミットメッセージは英語
+- `.claude/` ディレクトリの内容も必ずコミットに含める
+
+### スコープ規律
+
+- 指示されたファイル以外は変更しない
+- スコープ外の変更が必要な場合はユーザーに確認してから行う
+
+---
+
+## 重要な実装メモ
+
+### sqlite-vec の require
+
+```ruby
+require 'sqlite_vec'   # アンダースコア（ハイフンではない）
+```
+
+### MCP::Tool のエラーレスポンス
+
+```ruby
+MCP::Tool::Response.new([{ type: "text", text: "..." }], error: true)
+# is_error: ではなく error: キーワード
+# 確認は response.error? メソッド
+```
+
+### FTS5 の日本語対応
+
+`tokenize='trigram'` を使用（3文字以上の部分一致）。
+2文字以下の検索語は FTS5 にヒットしないのでテストに注意。
+
+### content_hash による冪等性
+
+`Digest::SHA256.hexdigest(content)` を UNIQUE INDEX で管理。
+同一内容の二重保存は DB 層で自動スキップされる。
+
+### 埋め込みバイナリ
+
+```ruby
+embedding.pack("f*")   # float配列 → blob
+```
+
+### created_at フォーマット
+
+```ruby
+Time.now.iso8601   # RFC 3339（タイムゾーンオフセットにコロンあり）
+```
+
+---
+
+## ファイル構成と責務
+
+| ファイル | 責務 |
+|---|---|
+| `lib/embedder.rb` | informers ONNX パイプライン、`embed(text)` |
+| `lib/memory_store.rb` | DB 初期化・store / search / list / delete / stats |
+| `scripts/mcp_server.rb` | MCP サーバー 5ツール定義 + 起動エントリポイント |
+| `scripts/start_mcp.sh` | Claude Desktop 用起動スクリプト（rbenv 絶対パス） |
+| `scripts/capture_session.rb` | Claude Code Stop hook ハンドラ（JSONL transcript → DB） |
+| `scripts/ingest_directory.rb` | ディレクトリ一括取り込み CLI |
+| `scripts/rebuild_embeddings.rb` | 全レコード再ベクトル化 |
+| `test/test_helper.rb` | StubEmbedder（位置重み付きハッシュ、決定論的ベクトル） |
+
+---
+
+## 設定ファイル
+
+- `.claude/settings.json` — Stop hook（capture_session.rb）設定済み
+- `~/Library/Application Support/Claude/claude_desktop_config.json` — `long-term-memory` MCP サーバー登録済み（`start_mcp.sh` 経由）
+
+---
+
+## メンテナンス skills
+
+`.claude/skills/` に以下を用意:
+
+| スキル | 用途 |
+|---|---|
+| `ingest-vault` | ディレクトリ一括取り込み |
+| `memory-search` | 検索・スコア確認 |
+| `memory-cleanup` | 不要記憶削除ワークフロー |
+| `memory-backup` | バックアップ・リストア |
+| `rebuild-embeddings` | モデル変更後の再ベクトル化 |
+| `memory-stats` | 統計・健全性チェック |
+| `memory-maintenance` | 全操作リファレンス |
