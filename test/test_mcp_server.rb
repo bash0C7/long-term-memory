@@ -36,7 +36,7 @@ class TestSearchMemoryTool < Test::Unit::TestCase
       query: "",
       server_context: { memory_store: @store }
     )
-    assert response.content.first[:text].include?("error") || response.is_error
+    assert response.content.first[:text].include?("error") || response.error?
   end
 end
 
