@@ -70,3 +70,62 @@ class TestMemoryStoreStore < Test::Unit::TestCase
     assert_equal 1, count
   end
 end
+
+class TestMemoryStoreMaintenance < Test::Unit::TestCase
+  def setup
+    @store = MemoryStore.new(":memory:", embedder: StubEmbedder.new)
+    @store.store(content: "記憶1", source: "claude_code", project: "proj_a")
+    @store.store(content: "記憶2", source: "claude_desktop")
+    @store.store(content: "記憶3", source: "obsidian", project: "proj_a")
+  end
+
+  def teardown
+    @store.close
+  end
+
+  def test_list_returns_all_by_default
+    results = @store.list
+    assert_equal 3, results.size
+  end
+
+  def test_list_filters_by_scope
+    results = @store.list(scope: "claude_code")
+    assert_equal 1, results.size
+    assert_equal "claude_code", results.first["source"]
+  end
+
+  def test_list_filters_by_project
+    results = @store.list(project: "proj_a")
+    assert_equal 2, results.size
+    assert results.all? { |r| r["project"] == "proj_a" }
+  end
+
+  def test_list_respects_limit
+    results = @store.list(limit: 2)
+    assert_equal 2, results.size
+  end
+
+  def test_delete_removes_record
+    id = @store.store(content: "削除テスト", source: "claude_code")
+    @store.delete(id)
+    rows = @store.db.execute("SELECT id FROM memories WHERE id = ?", [id])
+    assert_equal 0, rows.size
+  end
+
+  def test_delete_removes_from_vec
+    id = @store.store(content: "vec削除テスト", source: "claude_code")
+    @store.delete(id)
+    rows = @store.db.execute("SELECT memory_id FROM memories_vec WHERE memory_id = ?", [id])
+    assert_equal 0, rows.size
+  end
+
+  def test_stats_returns_counts
+    stats = @store.stats
+    assert_equal 3, stats[:total]
+    assert_equal 1, stats[:by_source]["claude_code"]
+    assert_equal 1, stats[:by_source]["claude_desktop"]
+    assert_equal 1, stats[:by_source]["obsidian"]
+    assert_not_nil stats[:oldest_at]
+    assert_not_nil stats[:newest_at]
+  end
+end

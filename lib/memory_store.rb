@@ -131,6 +131,38 @@ class MemoryStore
     scored.sort_by { |r| -r["score"] }.first(limit)
   end
 
+  def list(scope: nil, project: nil, limit: 20)
+    conditions = []
+    params = []
+    if scope
+      conditions << "source = ?"
+      params << scope
+    end
+    if project
+      conditions << "project = ?"
+      params << project
+    end
+    where = conditions.empty? ? "" : "WHERE #{conditions.join(' AND ')}"
+    params << limit
+    @db.execute("SELECT id, content, source, project, tags, created_at FROM memories #{where} ORDER BY created_at DESC LIMIT ?", params)
+  end
+
+  def delete(id)
+    @db.transaction do
+      @db.execute("DELETE FROM memories_vec WHERE memory_id = ?", [id])
+      @db.execute("DELETE FROM memories WHERE id = ?", [id])
+    end
+  end
+
+  def stats
+    total = @db.execute("SELECT COUNT(*) as c FROM memories").first["c"]
+    by_source = @db.execute("SELECT source, COUNT(*) as c FROM memories GROUP BY source")
+      .each_with_object({}) { |r, h| h[r["source"]] = r["c"] }
+    oldest = @db.execute("SELECT MIN(created_at) as t FROM memories").first["t"]
+    newest = @db.execute("SELECT MAX(created_at) as t FROM memories").first["t"]
+    { total: total, by_source: by_source, oldest_at: oldest, newest_at: newest }
+  end
+
   private
 
   def setup_extensions
