@@ -32,7 +32,7 @@ class MemoryStore
     return existing["id"] if existing
 
     tags_json = tags ? JSON.generate(tags) : nil
-    created_at = Time.now.strftime("%Y-%m-%dT%H:%M:%S%z")
+    created_at = Time.now.iso8601
 
     @db.execute(
       "INSERT INTO memories (content, source, project, tags, content_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)",

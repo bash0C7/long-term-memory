@@ -65,6 +65,7 @@ class TestMemoryStoreStore < Test::Unit::TestCase
     id1 = @store.store(content: "重複テスト", source: "claude_code")
     id2 = @store.store(content: "重複テスト", source: "claude_code")
     assert_equal id1, id2, "同じ content は同じ ID を返す（重複保存しない）"
+    assert_instance_of Integer, id2, "冪等パスでも Integer が返ること"
     count = @store.db.execute("SELECT COUNT(*) as c FROM memories").first["c"]
     assert_equal 1, count
   end
