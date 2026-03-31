@@ -47,6 +47,7 @@ class TestIngestDirectory < Test::Unit::TestCase
     File.write(File.join(@tmpdir, "note.md"), "プロジェクトテスト")
     IngestDirectory.run(directory: @tmpdir, source: "obsidian", project: "myvault", store: @store)
     results = @store.list
+    assert_not_nil results.first, "expected at least one record"
     assert_equal "obsidian", results.first["source"]
     assert_equal "myvault", results.first["project"]
   end

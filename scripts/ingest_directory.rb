@@ -13,17 +13,19 @@ module IngestDirectory
               .select { |f| File.file?(f) && extensions.include?(File.extname(f).downcase) }
 
     files.each do |path|
-      content = File.read(path, encoding: "utf-8")
-      next if content.strip.empty?
-      store.store(
-        content: content,
-        source: source,
-        project: project || File.basename(directory),
-        tags: [File.extname(path).delete(".")]
-      )
-      warn "ingested: #{path}"
-    rescue => e
-      warn "skip #{path}: #{e.message}"
+      begin
+        content = File.read(path, encoding: "utf-8")
+        next if content.strip.empty?
+        store.store(
+          content: content,
+          source: source,
+          project: project || File.basename(directory),
+          tags: [File.extname(path).delete(".")]
+        )
+        warn "ingested: #{path}"
+      rescue => e
+        warn "skip #{path}: #{e.message}"
+      end
     end
   end
 end
