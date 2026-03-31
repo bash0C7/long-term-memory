@@ -155,12 +155,14 @@ class MemoryStore
   end
 
   def stats
-    total = @db.execute("SELECT COUNT(*) as c FROM memories").first["c"]
-    by_source = @db.execute("SELECT source, COUNT(*) as c FROM memories GROUP BY source")
-      .each_with_object({}) { |r, h| h[r["source"]] = r["c"] }
-    oldest = @db.execute("SELECT MIN(created_at) as t FROM memories").first["t"]
-    newest = @db.execute("SELECT MAX(created_at) as t FROM memories").first["t"]
-    { total: total, by_source: by_source, oldest_at: oldest, newest_at: newest }
+    @db.transaction(:deferred) do
+      total = @db.execute("SELECT COUNT(*) as c FROM memories").first["c"]
+      by_source = @db.execute("SELECT source, COUNT(*) as c FROM memories GROUP BY source")
+        .each_with_object({}) { |r, h| h[r["source"]] = r["c"] }
+      oldest = @db.execute("SELECT MIN(created_at) as t FROM memories").first["t"]
+      newest = @db.execute("SELECT MAX(created_at) as t FROM memories").first["t"]
+      { total: total, by_source: by_source, oldest_at: oldest, newest_at: newest }
+    end
   end
 
   private
