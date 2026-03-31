@@ -34,7 +34,8 @@ class TestMemoryStoreSearch < Test::Unit::TestCase
   end
 
   def test_search_scope_filters_by_source
-    results = @store.search(query: "メモ", scope: "obsidian")
+    results = @store.search(query: "Obsidian", scope: "obsidian")
+    assert results.size > 0, "obsidian scope で結果が1件以上返ること"
     assert results.all? { |r| r["source"] == "obsidian" }, "scope フィルタが機能すること"
   end
 
@@ -45,8 +46,12 @@ class TestMemoryStoreSearch < Test::Unit::TestCase
   end
 
   def test_search_respects_limit
-    results = @store.search(query: "SQLite", limit: 1)
-    assert_equal 1, results.size
+    @store.store(content: "SQLiteのWALモードについて", source: "claude_code")
+    # now 2 records match "SQLite" — verify limit caps results
+    unlimited = @store.search(query: "SQLite", limit: 10)
+    assert unlimited.size >= 2, "limit なしなら2件以上ヒットすること"
+    limited = @store.search(query: "SQLite", limit: 1)
+    assert_equal 1, limited.size
   end
 
   def test_search_scores_are_positive

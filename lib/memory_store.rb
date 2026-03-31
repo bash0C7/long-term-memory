@@ -52,13 +52,20 @@ class MemoryStore
 
   def search(query:, scope: nil, project: nil, limit: 5)
     conditions = []
-    conditions << "m.source = '#{scope.gsub("'", "''")}'" if scope
-    conditions << "m.project = '#{project.gsub("'", "''")}'" if project
+    condition_params = []
+    if scope
+      conditions << "m.source = ?"
+      condition_params << scope
+    end
+    if project
+      conditions << "m.project = ?"
+      condition_params << project
+    end
     where_clause = conditions.empty? ? "" : "AND #{conditions.join(' AND ')}"
 
     # FTS5 検索
     fts_rows = begin
-      @db.execute(<<~SQL, [query, limit * 2])
+      @db.execute(<<~SQL, [query] + condition_params + [limit * 2])
         SELECT m.id, m.content, m.source, m.project, m.tags, m.created_at
         FROM memories m
         JOIN memories_fts ON memories_fts.rowid = m.id
@@ -81,7 +88,7 @@ class MemoryStore
       else
         @db.execute(
           "SELECT mv.memory_id, mv.distance FROM memories_vec mv JOIN memories m ON m.id = mv.memory_id WHERE 1=1 #{where_clause} ORDER BY mv.embedding <-> ? LIMIT ?",
-          [query_blob, limit * 2]
+          condition_params + [query_blob, limit * 2]
         )
       end
     rescue SQLite3::Exception
