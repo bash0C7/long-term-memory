@@ -20,7 +20,6 @@ class TestMemoryStoreSchema < Test::Unit::TestCase
   end
 
   def test_memories_vec_table_exists
-    tables = @store.db.execute("SELECT name FROM sqlite_master WHERE type='table'").map { |r| r["name"] }
-    assert_include tables, "memories_vec"
+    assert_nothing_raised { @store.db.execute("SELECT memory_id FROM memories_vec LIMIT 1") }
   end
 end

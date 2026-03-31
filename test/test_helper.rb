@@ -10,7 +10,7 @@ class StubEmbedder
 
   def embed(text)
     # テキストのハッシュ値から決定論的なベクトルを生成
-    seed = text.bytes.sum
+    seed = text.each_char.each_with_index.sum { |c, i| c.ord * (i + 1) }
     Array.new(VECTOR_SIZE) { |i| Math.sin(seed + i) }
   end
 end
