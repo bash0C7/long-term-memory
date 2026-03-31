@@ -206,15 +206,21 @@ long-term-memory/
 │   ├── embedder.rb          # informers ONNX ラッパー
 │   └── memory_store.rb      # DB 読み書き・検索ロジック
 ├── scripts/
-│   ├── mcp_server.rb        # MCP stdio サーバー
-│   └── capture_session.rb   # Claude Code Stop hook エントリポイント
+│   ├── mcp_server.rb          # MCP stdio サーバー
+│   ├── capture_session.rb     # Claude Code Stop hook エントリポイント
+│   ├── ingest_directory.rb    # ディレクトリ一括取り込み CLI
+│   └── rebuild_embeddings.rb  # 全エントリ再ベクトル化
+├── .claude/
+│   └── skills/
+│       └── memory-maintenance.md  # メンテナンス subagent スキル
 ├── test/
 │   ├── test_helper.rb
 │   ├── test_embedder.rb
 │   ├── test_memory_store.rb
 │   ├── test_search.rb
 │   ├── test_mcp_server.rb
-│   └── test_capture_session.rb
+│   ├── test_capture_session.rb
+│   └── test_ingest_directory.rb
 ├── db/                      # gitignore 対象
 │   └── memory.db
 └── docs/
@@ -246,6 +252,78 @@ gem "sqlite-vec"          # 0.1.9.alpha.1
 gem "mcp"
 gem "informers"
 gem "test-unit", group: :test
+```
+
+---
+
+## Bulk Ingestion
+
+ディレクトリ内のテキストファイルをまとめて記憶に取り込む。
+
+### スクリプト: `scripts/ingest_directory.rb`
+
+```
+bundle exec ruby scripts/ingest_directory.rb <directory> [--source obsidian] [--project vault] [--ext md,txt]
+```
+
+- 指定ディレクトリを再帰的に走査し、対象拡張子（デフォルト: `.md,.txt,.rb,.yaml`）のファイルを列挙
+- ファイルごとに `MemoryStore#store` を呼び埋め込み生成 → DB 保存
+- 既存エントリは `content` のハッシュ比較でスキップ（冪等）
+- 進捗は stderr に出力（stdout は MCP stdio と混在しないよう分離）
+
+### サブエージェントオーケストレーション
+
+Claude Code から subagent に実行させる形をとる。  
+`scripts/ingest_directory.rb` は単純な CLI として完結させ、  
+Claude Code 側からは以下のように呼ぶ：
+
+```
+! bundle exec ruby scripts/ingest_directory.rb ~/path/to/obsidian --source obsidian
+```
+
+または、専用スキル `ingest` を用意し、subagent がパス・オプションを解決してスクリプトを起動する。
+
+### テスト
+
+`test/test_ingest_directory.rb` — tmpdir に fixture ファイルを置いてスキャン・保存を検証
+
+---
+
+## Memory Maintenance
+
+保存した長期記憶のメンテナンスを Claude Code から行う。
+
+### MCP ツール追加（`mcp_server.rb`）
+
+| ツール | 説明 |
+|---|---|
+| `list_memories(scope?, project?, limit?)` | 最近の記憶を一覧（デフォルト20件） |
+| `delete_memory(id)` | 指定 ID の記憶を削除 |
+| `memory_stats` | 総件数・source 別件数・最古/最新日時を返す |
+
+### Claude Code スキル: `.claude/skills/memory-maintenance.md`
+
+```markdown
+# memory-maintenance
+
+長期記憶 DB のメンテナンスを行う subagent スキル。
+
+できること:
+- 記憶の一覧表示・検索
+- 古い・不要な記憶の削除
+- DB 統計の確認
+- ディレクトリの一括取り込み（ingest）
+- 埋め込みの再生成（モデル変更時）
+
+使い方: "memory maintenance" または "/memory-maintenance" で起動
+```
+
+### 再埋め込みスクリプト: `scripts/rebuild_embeddings.rb`
+
+モデルを変えたとき（例: ruri-v3 → 新モデル）に全エントリを再ベクトル化する。
+
+```
+bundle exec ruby scripts/rebuild_embeddings.rb
 ```
 
 ---
