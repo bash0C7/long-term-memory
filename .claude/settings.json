@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "Stop": [{
+      "matcher": "",
+      "hooks": [{
+        "type": "command",
+        "command": "cat >> /tmp/hook_probe.json"
+      }]
+    }]
+  }
+}
