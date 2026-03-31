@@ -3,7 +3,7 @@
 Claude Code / Claude Desktop のやりとりを SQLite + ベクトル DB に長期保存し、MCP ツール経由で検索・参照できるようにするシステム。
 
 **特徴:**
-- フルRuby（Python不使用）
+- Ruby 製
 - SQLite FTS5（trigram）+ sqlite-vec による日本語対応ハイブリッド検索
 - RRF融合 + 時間減衰スコアリング
 - 日本語特化埋め込みモデル `mochiya98/ruri-v3-310m-onnx`（ONNX, 768次元）
@@ -157,6 +157,14 @@ long-term-memory/
 3. **RRF（Reciprocal Rank Fusion）** で両結果を融合: `score = Σ 1/(60 + rank + 1)`
 4. **時間減衰** を適用: `score × 0.5^(age_days / 30)`（30日で半減）
 5. スコア降順でソートして返す
+
+---
+
+## 謝辞
+
+sqlite-vec を使ったハイブリッド検索の実装にあたり、以下の記事を参考にしました。
+
+- [sqlite-vec で作る全文検索×ベクトル検索ハイブリッドシステム](https://zenn.dev/noprogllama/articles/7c24b2c2410213) — noprogllama
 
 ---
 
