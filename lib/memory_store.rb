@@ -50,6 +50,80 @@ class MemoryStore
     id
   end
 
+  def search(query:, scope: nil, project: nil, limit: 5)
+    conditions = []
+    conditions << "m.source = '#{scope.gsub("'", "''")}'" if scope
+    conditions << "m.project = '#{project.gsub("'", "''")}'" if project
+    where_clause = conditions.empty? ? "" : "AND #{conditions.join(' AND ')}"
+
+    # FTS5 検索
+    fts_rows = begin
+      @db.execute(<<~SQL, [query, limit * 2])
+        SELECT m.id, m.content, m.source, m.project, m.tags, m.created_at
+        FROM memories m
+        JOIN memories_fts ON memories_fts.rowid = m.id
+        WHERE memories_fts MATCH ? #{where_clause}
+        ORDER BY rank
+        LIMIT ?
+      SQL
+    rescue SQLite3::Exception
+      []
+    end
+
+    # ベクトル検索
+    query_blob = @embedder.embed(query).pack("f*")
+    vec_rows = begin
+      if conditions.empty?
+        @db.execute(
+          "SELECT mv.memory_id, mv.distance FROM memories_vec mv ORDER BY mv.embedding <-> ? LIMIT ?",
+          [query_blob, limit * 2]
+        )
+      else
+        @db.execute(
+          "SELECT mv.memory_id, mv.distance FROM memories_vec mv JOIN memories m ON m.id = mv.memory_id WHERE 1=1 #{where_clause} ORDER BY mv.embedding <-> ? LIMIT ?",
+          [query_blob, limit * 2]
+        )
+      end
+    rescue SQLite3::Exception
+      []
+    end
+
+    # RRF 融合
+    k = 60
+    scores = Hash.new(0.0)
+
+    fts_rows.each_with_index do |row, rank|
+      id = row["id"] || row[0]
+      scores[id] += 1.0 / (k + rank + 1)
+    end
+
+    vec_rows.each_with_index do |row, rank|
+      id = row["memory_id"] || row[0]
+      scores[id] += 1.0 / (k + rank + 1)
+    end
+
+    return [] if scores.empty?
+
+    # 時間減衰をかけてスコア確定
+    all_ids = scores.keys
+    placeholders = all_ids.map { "?" }.join(",")
+    meta_rows = @db.execute(
+      "SELECT id, content, source, project, tags, created_at FROM memories WHERE id IN (#{placeholders})",
+      all_ids
+    )
+    meta_by_id = meta_rows.each_with_object({}) { |r, h| h[r["id"]] = r }
+
+    scored = scores.map do |id, rrf|
+      row = meta_by_id[id]
+      next unless row
+      age_days = (Time.now - Time.parse(row["created_at"])).abs / 86400.0
+      decay = 0.5 ** (age_days / 30.0)
+      row.merge("score" => rrf * decay)
+    end.compact
+
+    scored.sort_by { |r| -r["score"] }.first(limit)
+  end
+
   private
 
   def setup_extensions
@@ -87,7 +161,8 @@ class MemoryStore
         content,
         tags,
         content='memories',
-        content_rowid='id'
+        content_rowid='id',
+        tokenize='trigram'
       )
     SQL
 
