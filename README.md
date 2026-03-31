@@ -157,3 +157,9 @@ long-term-memory/
 3. **RRF（Reciprocal Rank Fusion）** で両結果を融合: `score = Σ 1/(60 + rank + 1)`
 4. **時間減衰** を適用: `score × 0.5^(age_days / 30)`（30日で半減）
 5. スコア降順でソートして返す
+
+---
+
+## License
+
+[MIT License](LICENSE) © 2026 Toshiaki "bash" KOSHIBA
