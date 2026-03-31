@@ -23,8 +23,12 @@ module CaptureSession
     return [] unless transcript_path && File.exist?(transcript_path)
     File.readlines(transcript_path, chomp: true)
       .reject(&:empty?)
-      .map { |line| JSON.parse(line) rescue nil }
-      .compact
+      .filter_map do |line|
+        JSON.parse(line)
+      rescue JSON::ParserError => e
+        warn "capture_session: skipping malformed line: #{e.message}"
+        nil
+      end
   rescue => e
     warn "capture_session: failed to read transcript: #{e.message}"
     []

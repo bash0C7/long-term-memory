@@ -45,8 +45,7 @@ class TestCaptureSession < Test::Unit::TestCase
       "transcript_path" => transcript.path
     })
     CaptureSession.run(input, store: @store)
-    count = @store.db.execute("SELECT COUNT(*) as c FROM memories").first["c"]
-    assert_equal 1, count
+    assert_equal 1, @store.stats[:total]
   ensure
     transcript.close
     transcript.unlink
@@ -63,8 +62,7 @@ class TestCaptureSession < Test::Unit::TestCase
       "transcript_path" => transcript.path
     })
     CaptureSession.run(input, store: @store)
-    count = @store.db.execute("SELECT COUNT(*) as c FROM memories").first["c"]
-    assert_equal 0, count, "空の transcript は保存しない"
+    assert_equal 0, @store.stats[:total], "空の transcript は保存しない"
   ensure
     transcript.close
     transcript.unlink
