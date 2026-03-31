@@ -22,6 +22,34 @@ class MemoryStore
     @db.close
   end
 
+  def store(content:, source:, project: nil, tags: nil)
+    content_hash = Digest::SHA256.hexdigest(content)
+
+    # 冪等: 同じ content_hash が既にあればその id を返す
+    existing = @db.execute(
+      "SELECT id FROM memories WHERE content_hash = ?", [content_hash]
+    ).first
+    return existing["id"] if existing
+
+    tags_json = tags ? JSON.generate(tags) : nil
+    created_at = Time.now.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+    @db.execute(
+      "INSERT INTO memories (content, source, project, tags, content_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+      [content, source, project, tags_json, content_hash, created_at]
+    )
+    id = @db.last_insert_row_id
+
+    embedding = @embedder.embed(content)
+    embedding_blob = embedding.pack("f*")
+    @db.execute(
+      "INSERT INTO memories_vec(memory_id, embedding) VALUES (?, ?)",
+      [id, embedding_blob]
+    )
+
+    id
+  end
+
   private
 
   def setup_extensions
