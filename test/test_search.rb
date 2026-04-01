@@ -60,4 +60,10 @@ class TestMemoryStoreSearch < Test::Unit::TestCase
     results = @store.search(query: "Ruby")
     assert results.all? { |r| r["score"] > 0 }, "スコアは正の値"
   end
+
+  def test_search_with_hyphenated_query
+    @store.store(content: "dotfiles-status スキルでstowのリンク状態を確認した", source: "claude_code")
+    results = @store.search(query: "dotfiles-status")
+    assert results.size > 0, "ハイフン付きクエリでも FTS5 が結果を返すこと"
+  end
 end
