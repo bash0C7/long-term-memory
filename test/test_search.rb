@@ -22,15 +22,17 @@ class TestMemoryStoreSearch < Test::Unit::TestCase
     assert results.size > 0
     result = results.first
     assert_include result.keys, "id"
-    assert_include result.keys, "content"
+    assert_include result.keys, "summary"
+    assert_include result.keys, "keywords"
     assert_include result.keys, "source"
     assert_include result.keys, "score"
     assert_include result.keys, "created_at"
+    assert_not_include result.keys, "content"
   end
 
   def test_search_fts_finds_keyword_match
     results = @store.search(query: "全文検索")
-    assert results.any? { |r| r["content"].include?("全文検索") }, "FTS5 でキーワードが見つかること"
+    assert results.any? { |r| r["summary"]&.include?("全文検索") || r["keywords"]&.include?("全文検索") }, "FTS5 でキーワードが見つかること"
   end
 
   def test_search_scope_filters_by_source
