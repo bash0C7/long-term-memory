@@ -113,6 +113,7 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 | `scripts/mcp_server.rb` | MCP サーバー 5ツール定義 + 起動エントリポイント |
 | `scripts/start_mcp.sh` | Claude Desktop 用起動スクリプト（rbenv 絶対パス） |
 | `scripts/capture_session.rb` | Claude Code Stop hook ハンドラ（JSONL transcript → DB） |
+| `scripts/skill_context.rb` | PreToolUse hook — Skill 呼び出し前にスキル名で記憶検索してコンテキスト注入 |
 | `scripts/ingest_directory.rb` | ディレクトリ一括取り込み CLI |
 | `scripts/rebuild_embeddings.rb` | 全レコード再ベクトル化 |
 | `test/test_helper.rb` | StubEmbedder（位置重み付きハッシュ、決定論的ベクトル） |
@@ -122,6 +123,7 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 ## 設定ファイル
 
 - `.claude/settings.json` — Stop hook（capture_session.rb）設定済み
+- `dotfiles の settings.local.json` — PreToolUse Skill hook（skill_context.rb）設定済み
 - `.mcp.json` — Claude Code 向け MCP サーバー設定（`start_mcp.sh` 経由）
 - `~/Library/Application Support/Claude/claude_desktop_config.json` — Claude Desktop 向け MCP サーバー登録済み（`start_mcp.sh` 経由）
 
