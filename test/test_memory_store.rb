@@ -69,6 +69,23 @@ class TestMemoryStoreStore < Test::Unit::TestCase
     count = @store.db.execute("SELECT COUNT(*) as c FROM memories").first["c"]
     assert_equal 1, count
   end
+
+  def test_store_generates_summary
+    long_content = "RubyのブロックはProcとlambdaの違いを理解することが重要です。" * 5
+    id = @store.store(content: long_content, source: "test")
+    row = @store.db.execute("SELECT summary FROM memories WHERE id = ?", [id]).first
+    assert_not_nil row["summary"]
+    assert row["summary"].length <= 200
+  end
+
+  def test_store_generates_keywords
+    id = @store.store(content: "Ruby blocks procs lambdas closures programming language", source: "test")
+    row = @store.db.execute("SELECT keywords FROM memories WHERE id = ?", [id]).first
+    assert_not_nil row["keywords"]
+    keywords = JSON.parse(row["keywords"])
+    assert_instance_of Array, keywords
+    assert keywords.length >= 1
+  end
 end
 
 class TestMemoryStoreMaintenance < Test::Unit::TestCase

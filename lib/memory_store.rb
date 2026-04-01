@@ -4,6 +4,7 @@ require "json"
 require "digest"
 require "time"
 require_relative "embedder"
+require_relative "keyword_extractor"
 
 class MemoryStore
   attr_reader :db
@@ -25,22 +26,25 @@ class MemoryStore
   def store(content:, source:, project: nil, tags: nil)
     content_hash = Digest::SHA256.hexdigest(content)
 
-    # 冪等: 同じ content_hash が既にあればその id を返す
     existing = @db.execute(
       "SELECT id FROM memories WHERE content_hash = ?", [content_hash]
     ).first
     return existing["id"] if existing
 
-    tags_json = tags ? JSON.generate(tags) : nil
-    created_at = Time.now.iso8601
+    summary       = KeywordExtractor.summarize(content)
+    keywords      = KeywordExtractor.extract(content)
+    keywords_json = JSON.generate(keywords)
+    tags_json     = tags ? JSON.generate(tags) : nil
+    created_at    = Time.now.iso8601
 
     @db.execute(
-      "INSERT INTO memories (content, source, project, tags, content_hash, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-      [content, source, project, tags_json, content_hash, created_at]
+      "INSERT INTO memories (content, source, project, tags, content_hash, created_at, summary, keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [content, source, project, tags_json, content_hash, created_at, summary, keywords_json]
     )
     id = @db.last_insert_row_id
 
-    embedding = @embedder.embed(content)
+    embed_text     = "#{summary} #{keywords.join(' ')}"
+    embedding      = @embedder.embed(embed_text)
     embedding_blob = embedding.pack("f*")
     @db.execute(
       "INSERT INTO memories_vec(memory_id, embedding) VALUES (?, ?)",
@@ -187,7 +191,9 @@ class MemoryStore
         project      TEXT,
         tags         TEXT,
         content_hash TEXT,
-        created_at   TEXT    NOT NULL
+        created_at   TEXT    NOT NULL,
+        summary      TEXT,
+        keywords     TEXT
       )
     SQL
 
