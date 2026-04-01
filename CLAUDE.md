@@ -77,6 +77,31 @@ embedding.pack("f*")   # float配列 → blob
 Time.now.iso8601   # RFC 3339（タイムゾーンオフセットにコロンあり）
 ```
 
+### stats メソッドの返却キー
+
+```ruby
+stats = store.stats
+# 正しいキー: :total, :by_source, :oldest_at, :newest_at
+# NG: :total_memories, :total_vectors, :db_size_mb（存在しない）
+stats[:total]      # Integer
+stats[:by_source]  # Hash { source => count }
+stats[:oldest_at]  # String (ISO8601)
+stats[:newest_at]  # String (ISO8601)
+```
+
+### CLIで素早くDB確認する場合のStubEmbedder
+
+ONNX モデルのロードを避けて stats/list だけ確認したいとき:
+
+```ruby
+require_relative 'lib/memory_store'
+class StubEmbedder
+  VECTOR_SIZE = 768                  # VECTOR_SIZE 定数が必須
+  def embed(t); [0.0] * 768; end
+end
+store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
+```
+
 ---
 
 ## ファイル構成と責務
