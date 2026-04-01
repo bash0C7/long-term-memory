@@ -30,12 +30,15 @@ bundle exec ruby -e "
 require_relative 'lib/memory_store'
 s = MemoryStore.new('db/memory.db')
 total = s.stats[:total]
-vec_count = s.db.execute('SELECT COUNT(*) as c FROM memories_vec').first['c']
+vec_count = s.db.execute('SELECT COUNT(*) AS c FROM memories_vec').first['c']
 puts \"memories: #{total}, memories_vec: #{vec_count}\"
 puts vec_count == total ? 'OK: 件数一致' : 'NG: 件数不一致'
 s.close
 "
 ```
+
+> **注意:** `MemoryStore#db` は `results_as_hash = true` で初期化されているため、
+> `execute(...).first[0]` は `nil` になる。必ず `SELECT ... AS alias` + `first['alias']` を使うこと。
 
 ## 次元数が変わる場合（スキーマ再作成が必要）
 
