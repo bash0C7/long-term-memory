@@ -18,6 +18,8 @@ module KeywordExtractor
     です ます した ない して いう から まで よる よう
   ].freeze
 
+  STOP_WORDS = (ENGLISH_STOP_WORDS + JAPANESE_STOP_WORDS).map(&:downcase).to_set.freeze
+
   def self.summarize(text)
     text.to_s[0, SUMMARY_LENGTH] || ""
   end
@@ -43,15 +45,14 @@ module KeywordExtractor
     text.scan(/[a-zA-Z][a-zA-Z0-9_]*/).each do |word|
       tokens << word if word.length >= 2
     end
-    text.scan(/[ぁ-んァ-ヶ一-龥]+/).each do |run|
+    text.scan(/[\p{Hiragana}\p{Katakana}\p{Han}]+/).each do |run|
       run.chars.each_cons(2) { |a, b| tokens << (a + b) }
     end
     tokens
   end
 
   def self.filter(tokens)
-    stop = (ENGLISH_STOP_WORDS + JAPANESE_STOP_WORDS).map(&:downcase).to_set
-    tokens.reject { |t| stop.include?(t.downcase) }
+    tokens.reject { |t| STOP_WORDS.include?(t.downcase) }
           .reject { |t| t.length < 2 }
   end
 
