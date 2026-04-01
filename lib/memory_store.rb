@@ -67,10 +67,9 @@ class MemoryStore
     end
     where_clause = conditions.empty? ? "" : "AND #{conditions.join(' AND ')}"
 
-    # FTS5 検索
-    fts_rows = begin
+    fts_ids = begin
       @db.execute(<<~SQL, [query] + condition_params + [limit * 2])
-        SELECT m.id, m.content, m.source, m.project, m.tags, m.created_at
+        SELECT m.id
         FROM memories m
         JOIN memories_fts ON memories_fts.rowid = m.id
         WHERE memories_fts MATCH ? #{where_clause}
@@ -81,7 +80,6 @@ class MemoryStore
       []
     end
 
-    # ベクトル検索
     query_blob = @embedder.embed(query).pack("f*")
     vec_rows = begin
       if conditions.empty?
@@ -99,11 +97,10 @@ class MemoryStore
       []
     end
 
-    # RRF 融合
     k = 60
     scores = Hash.new(0.0)
 
-    fts_rows.each_with_index do |row, rank|
+    fts_ids.each_with_index do |row, rank|
       id = row["id"] || row[0]
       scores[id] += 1.0 / (k + rank + 1)
     end
@@ -115,11 +112,10 @@ class MemoryStore
 
     return [] if scores.empty?
 
-    # 時間減衰をかけてスコア確定
-    all_ids = scores.keys
+    all_ids      = scores.keys
     placeholders = all_ids.map { "?" }.join(",")
-    meta_rows = @db.execute(
-      "SELECT id, content, source, project, tags, created_at FROM memories WHERE id IN (#{placeholders})",
+    meta_rows    = @db.execute(
+      "SELECT id, summary, keywords, source, project, created_at FROM memories WHERE id IN (#{placeholders})",
       all_ids
     )
     meta_by_id = meta_rows.each_with_object({}) { |r, h| h[r["id"]] = r }
@@ -128,11 +124,26 @@ class MemoryStore
       row = meta_by_id[id]
       next unless row
       age_days = (Time.now - Time.parse(row["created_at"])).abs / 86400.0
-      decay = 0.5 ** (age_days / 30.0)
+      decay    = 0.5 ** (age_days / 30.0)
       row.merge("score" => rrf * decay)
     end.compact
 
-    scored.sort_by { |r| -r["score"] }.first(limit)
+    scored.sort_by { |r| -r["score"] }.first(limit).map do |r|
+      kw = begin
+        r["keywords"] ? JSON.parse(r["keywords"]) : []
+      rescue JSON::ParserError
+        []
+      end
+      {
+        "id"         => r["id"],
+        "score"      => r["score"],
+        "summary"    => r["summary"],
+        "keywords"   => kw,
+        "source"     => r["source"],
+        "project"    => r["project"],
+        "created_at" => r["created_at"]
+      }
+    end
   end
 
   def list(scope: nil, project: nil, limit: 20)
@@ -148,7 +159,17 @@ class MemoryStore
     end
     where = conditions.empty? ? "" : "WHERE #{conditions.join(' AND ')}"
     params << limit
-    @db.execute("SELECT id, content, source, project, tags, created_at FROM memories #{where} ORDER BY created_at DESC LIMIT ?", params)
+    @db.execute(
+      "SELECT id, summary, keywords, source, project, created_at FROM memories #{where} ORDER BY created_at DESC LIMIT ?",
+      params
+    ).map do |r|
+      kw = begin
+        r["keywords"] ? JSON.parse(r["keywords"]) : []
+      rescue JSON::ParserError
+        []
+      end
+      r.merge("keywords" => kw)
+    end
   end
 
   def delete(id)
@@ -156,6 +177,20 @@ class MemoryStore
       @db.execute("DELETE FROM memories_vec WHERE memory_id = ?", [id])
       @db.execute("DELETE FROM memories WHERE id = ?", [id])
     end
+  end
+
+  def get(id)
+    row = @db.execute(
+      "SELECT id, content, summary, keywords, source, project, tags, created_at FROM memories WHERE id = ?",
+      [id]
+    ).first
+    return nil unless row
+    kw = begin
+      row["keywords"] ? JSON.parse(row["keywords"]) : []
+    rescue JSON::ParserError
+      []
+    end
+    row.merge("keywords" => kw)
   end
 
   def stats

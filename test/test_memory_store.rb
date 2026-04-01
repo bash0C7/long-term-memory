@@ -146,3 +146,67 @@ class TestMemoryStoreMaintenance < Test::Unit::TestCase
     assert_not_nil stats[:newest_at]
   end
 end
+
+class TestMemoryStoreResponseFormat < Test::Unit::TestCase
+  def setup
+    @store = MemoryStore.new(":memory:", embedder: StubEmbedder.new)
+    @store.store(content: "Ruby programming with blocks and lambdas closures", source: "claude_code", project: "proj1")
+  end
+
+  def teardown
+    @store.close
+  end
+
+  def test_search_does_not_return_content
+    results = @store.search(query: "Ruby")
+    assert_instance_of Array, results
+    results.each do |r|
+      assert_false r.key?("content"), "search result must not include content key"
+    end
+  end
+
+  def test_search_returns_summary_and_keywords
+    results = @store.search(query: "Ruby")
+    results.each do |r|
+      assert r.key?("summary"), "search result must include summary"
+      assert r.key?("keywords"), "search result must include keywords"
+      assert_instance_of Array, r["keywords"]
+    end
+  end
+
+  def test_list_does_not_return_content
+    results = @store.list
+    results.each do |r|
+      assert_false r.key?("content"), "list result must not include content key"
+    end
+  end
+
+  def test_list_returns_summary_and_keywords
+    results = @store.list
+    results.each do |r|
+      assert r.key?("summary")
+      assert r.key?("keywords")
+      assert_instance_of Array, r["keywords"]
+    end
+  end
+
+  def test_get_returns_full_content
+    id = @store.store(content: "full content text for get test", source: "test")
+    result = @store.get(id)
+    assert_not_nil result
+    assert_equal "full content text for get test", result["content"]
+  end
+
+  def test_get_returns_summary_and_keywords
+    id = @store.store(content: "Ruby programming blocks closures", source: "test")
+    result = @store.get(id)
+    assert result.key?("summary")
+    assert result.key?("keywords")
+    assert_instance_of Array, result["keywords"]
+  end
+
+  def test_get_returns_nil_for_missing_id
+    result = @store.get(99999)
+    assert_nil result
+  end
+end
