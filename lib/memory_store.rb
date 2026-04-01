@@ -68,7 +68,7 @@ class MemoryStore
     where_clause = conditions.empty? ? "" : "AND #{conditions.join(' AND ')}"
 
     fts_ids = begin
-      fts_query = '"' + query.gsub('"', '""') + '"'
+      fts_query = query.gsub(/[-+*^"()]/, ' ').squeeze(' ').strip
       @db.execute(<<~SQL, [fts_query] + condition_params + [limit * 2])
         SELECT m.id
         FROM memories m
