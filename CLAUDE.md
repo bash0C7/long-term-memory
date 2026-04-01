@@ -122,20 +122,22 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 ## 設定ファイル
 
 - `.claude/settings.json` — Stop hook（capture_session.rb）設定済み
-- `~/Library/Application Support/Claude/claude_desktop_config.json` — `long-term-memory` MCP サーバー登録済み（`start_mcp.sh` 経由）
+- `.mcp.json` — Claude Code 向け MCP サーバー設定（`start_mcp.sh` 経由）
+- `~/Library/Application Support/Claude/claude_desktop_config.json` — Claude Desktop 向け MCP サーバー登録済み（`start_mcp.sh` 経由）
 
 ---
 
 ## メンテナンス skills
 
-`.claude/skills/` に以下を用意:
+`.claude/skills/` に以下を用意（すべて `long-term-memory-` prefix 付き）:
 
-| スキル | 用途 |
-|---|---|
-| `ingest-vault` | ディレクトリ一括取り込み |
-| `memory-search` | 検索・スコア確認 |
-| `memory-cleanup` | 不要記憶削除ワークフロー |
-| `memory-backup` | バックアップ・リストア |
-| `rebuild-embeddings` | モデル変更後の再ベクトル化 |
-| `memory-stats` | 統計・健全性チェック |
-| `memory-maintenance` | 全操作リファレンス |
+| スキル（呼び出し名） | ファイル名 | 用途 |
+|---|---|---|
+| `/setup` | `long-term-memory-setup.md` | gems インストール・テスト・MCP 登録 |
+| `/ingest-vault` | `long-term-memory-ingest-vault.md` | ディレクトリ一括取り込み |
+| `/memory-search` | `long-term-memory-search.md` | 検索・スコア確認 |
+| `/memory-cleanup` | `long-term-memory-cleanup.md` | 不要記憶削除ワークフロー |
+| `/memory-backup` | `long-term-memory-backup.md` | バックアップ・リストア |
+| `/rebuild-embeddings` | `long-term-memory-rebuild-embeddings.md` | モデル変更後の再ベクトル化 |
+| `/memory-stats` | `long-term-memory-stats.md` | 統計・健全性チェック |
+| `/memory-maintenance` | `long-term-memory-maintenance.md` | 全操作リファレンス |
