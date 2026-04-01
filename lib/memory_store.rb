@@ -168,7 +168,14 @@ class MemoryStore
       rescue JSON::ParserError
         []
       end
-      r.merge("keywords" => kw)
+      {
+        "id"         => r["id"],
+        "summary"    => r["summary"],
+        "keywords"   => kw,
+        "source"     => r["source"],
+        "project"    => r["project"],
+        "created_at" => r["created_at"]
+      }
     end
   end
 
@@ -190,7 +197,16 @@ class MemoryStore
     rescue JSON::ParserError
       []
     end
-    row.merge("keywords" => kw)
+    {
+      "id"         => row["id"],
+      "content"    => row["content"],
+      "summary"    => row["summary"],
+      "keywords"   => kw,
+      "source"     => row["source"],
+      "project"    => row["project"],
+      "tags"       => row["tags"],
+      "created_at" => row["created_at"]
+    }
   end
 
   def stats
