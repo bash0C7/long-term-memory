@@ -60,6 +60,14 @@ MCP::Tool::Response.new([{ type: "text", text: "..." }], error: true)
 `tokenize='trigram'` を使用（3文字以上の部分一致）。
 2文字以下の検索語は FTS5 にヒットしないのでテストに注意。
 
+`MemoryStore#search` は FTS5 に渡す前にクエリの演算子文字を除去する:
+
+```ruby
+fts_query = query.gsub(/[-+*^"()]/, ' ').squeeze(' ').strip
+```
+
+ハイフン付きスキル名（例: `"dotfiles-status"`）をそのまま渡しても安全。
+
 ### content_hash による冪等性
 
 `Digest::SHA256.hexdigest(content)` を UNIQUE INDEX で管理。
@@ -113,6 +121,7 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 | `scripts/mcp_server.rb` | MCP サーバー 5ツール定義 + 起動エントリポイント |
 | `scripts/start_mcp.sh` | Claude Desktop 用起動スクリプト（rbenv 絶対パス） |
 | `scripts/capture_session.rb` | Claude Code Stop hook ハンドラ（JSONL transcript → DB） |
+| `scripts/capture_tool_use.rb` | Claude Code PostToolUse hook ハンドラ（Edit/Write/Bash/WebFetch/WebSearch をキャプチャ） |
 | `scripts/skill_context.rb` | PreToolUse hook — Skill 呼び出し前にスキル名で記憶検索してコンテキスト注入 |
 | `scripts/ingest_directory.rb` | ディレクトリ一括取り込み CLI |
 | `scripts/rebuild_embeddings.rb` | 全レコード再ベクトル化 |
