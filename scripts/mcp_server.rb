@@ -6,11 +6,11 @@ require "embedder"
 
 DB_PATH = File.expand_path("../../db/memory.db", __FILE__).freeze
 
-class SearchMemoryTool < MCP::Tool
+class LongTermMemorySearch < MCP::Tool
   description <<~DESC
-    長期記憶をハイブリッド検索（FTS5+ベクトル+RRF）で照会する。
-    query に scope ワード（"obsidian", "claude_code" など）や
-    プロジェクト名を含めると絞り込みが効く。
+    【長期記憶】ハイブリッド検索（FTS5全文一致 + ベクトル意味検索 + RRF融合）で長期記憶を照会する。
+    query に scope ワード（"obsidian", "claude_code" など）やプロジェクト名を含めると絞り込みが効く。
+    結果は summary と keywords を返す。全文が必要な場合は long_term_memory_get を使う。
   DESC
 
   input_schema(
@@ -27,7 +27,7 @@ class SearchMemoryTool < MCP::Tool
     def call(query:, scope: nil, project: nil, limit: 5, server_context:)
       return MCP::Tool::Response.new([{ type: "text", text: '{"error":"query is required"}' }], error: true) if query.to_s.strip.empty?
 
-      store = server_context[:memory_store]
+      store   = server_context[:memory_store]
       results = store.search(query: query, scope: scope, project: project, limit: limit)
       MCP::Tool::Response.new([{ type: "text", text: JSON.pretty_generate(results) }])
     rescue => e
@@ -36,8 +36,8 @@ class SearchMemoryTool < MCP::Tool
   end
 end
 
-class StoreMemoryTool < MCP::Tool
-  description "記憶を保存する（Claude Desktop からの手動保存用）"
+class LongTermMemoryStore < MCP::Tool
+  description "【長期記憶】記憶を保存する（Claude Desktop からの手動保存用）。summary と keywords を自動生成する。"
 
   input_schema(
     properties: {
@@ -52,7 +52,7 @@ class StoreMemoryTool < MCP::Tool
   class << self
     def call(content:, source:, project: nil, tags: nil, server_context:)
       store = server_context[:memory_store]
-      id = store.store(content: content, source: source, project: project, tags: tags)
+      id    = store.store(content: content, source: source, project: project, tags: tags)
       MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ id: id, status: "stored" }) }])
     rescue => e
       MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: e.message }) }], error: true)
@@ -60,8 +60,8 @@ class StoreMemoryTool < MCP::Tool
   end
 end
 
-class ListMemoriesTool < MCP::Tool
-  description "最近の記憶を一覧表示する"
+class LongTermMemoryList < MCP::Tool
+  description "【長期記憶】最近の記憶を一覧表示する。summary と keywords を返す。"
 
   input_schema(
     properties: {
@@ -73,7 +73,7 @@ class ListMemoriesTool < MCP::Tool
 
   class << self
     def call(scope: nil, project: nil, limit: 20, server_context:)
-      store = server_context[:memory_store]
+      store   = server_context[:memory_store]
       results = store.list(scope: scope, project: project, limit: limit)
       MCP::Tool::Response.new([{ type: "text", text: JSON.pretty_generate(results) }])
     rescue => e
@@ -82,8 +82,32 @@ class ListMemoriesTool < MCP::Tool
   end
 end
 
-class DeleteMemoryTool < MCP::Tool
-  description "指定 ID の記憶を削除する"
+class LongTermMemoryGet < MCP::Tool
+  description "【長期記憶】指定 ID の記憶を全文で取得する。search/list で見つけた ID を使い全文が必要な場合に使う。"
+
+  input_schema(
+    properties: {
+      id: { type: "integer", description: "取得する記憶の ID" }
+    },
+    required: ["id"]
+  )
+
+  class << self
+    def call(id:, server_context:)
+      store  = server_context[:memory_store]
+      result = store.get(id)
+      if result.nil?
+        return MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: "not found: id=#{id}" }) }], error: true)
+      end
+      MCP::Tool::Response.new([{ type: "text", text: JSON.pretty_generate(result) }])
+    rescue => e
+      MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: e.message }) }], error: true)
+    end
+  end
+end
+
+class LongTermMemoryDelete < MCP::Tool
+  description "【長期記憶】指定 ID の記憶を削除する"
 
   input_schema(
     properties: {
@@ -103,8 +127,8 @@ class DeleteMemoryTool < MCP::Tool
   end
 end
 
-class MemoryStatsTool < MCP::Tool
-  description "記憶 DB の統計情報（総件数・source 別・最古/最新日時）を返す"
+class LongTermMemoryStats < MCP::Tool
+  description "【長期記憶】記憶 DB の統計情報（総件数・source 別・最古/最新日時）を返す"
 
   input_schema(properties: {})
 
@@ -119,13 +143,19 @@ class MemoryStatsTool < MCP::Tool
   end
 end
 
-# エントリポイント（直接実行時のみ起動）
 if __FILE__ == $0
-  store = MemoryStore.new(DB_PATH)
+  store  = MemoryStore.new(DB_PATH)
   server = MCP::Server.new(
     name: "long-term-memory",
     version: "1.0.0",
-    tools: [SearchMemoryTool, StoreMemoryTool, ListMemoriesTool, DeleteMemoryTool, MemoryStatsTool],
+    tools: [
+      LongTermMemorySearch,
+      LongTermMemoryStore,
+      LongTermMemoryList,
+      LongTermMemoryGet,
+      LongTermMemoryDelete,
+      LongTermMemoryStats
+    ],
     server_context: { memory_store: store }
   )
   transport = MCP::Server::Transports::StdioTransport.new(server)
