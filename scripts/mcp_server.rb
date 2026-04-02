@@ -8,7 +8,8 @@ DB_PATH = File.expand_path("../../db/memory.db", __FILE__).freeze
 
 class LongTermMemorySearch < MCP::Tool
   description <<~DESC
-    【長期記憶】ハイブリッド検索（FTS5全文一致 + ベクトル意味検索 + RRF融合）で長期記憶を照会する。
+    【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。一般的な記憶・永続記憶・CLAUDE.md 想起には使わない。】
+    ハイブリッド検索（FTS5全文一致 + ベクトル意味検索 + RRF融合）で長期記憶DBを照会する。
     query に scope ワード（"obsidian", "claude_code" など）やプロジェクト名を含めると絞り込みが効く。
     結果は summary と keywords を返す。全文が必要な場合は long_term_memory_get を使う。
   DESC
@@ -37,7 +38,7 @@ class LongTermMemorySearch < MCP::Tool
 end
 
 class LongTermMemoryStore < MCP::Tool
-  description "【長期記憶】記憶を保存する（Claude Desktop からの手動保存用）。summary と keywords を自動生成する。"
+  description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。一般的な記憶保存・永続記憶には使わない。】記憶を長期記憶DBに保存する（Claude Desktop からの手動保存用）。summary と keywords を自動生成する。"
 
   input_schema(
     properties: {
@@ -61,7 +62,7 @@ class LongTermMemoryStore < MCP::Tool
 end
 
 class LongTermMemoryList < MCP::Tool
-  description "【長期記憶】最近の記憶を一覧表示する。summary と keywords を返す。"
+  description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。】最近の長期記憶を一覧表示する。summary と keywords を返す。"
 
   input_schema(
     properties: {
@@ -83,7 +84,7 @@ class LongTermMemoryList < MCP::Tool
 end
 
 class LongTermMemoryGet < MCP::Tool
-  description "【長期記憶】指定 ID の記憶を全文で取得する。search/list で見つけた ID を使い全文が必要な場合に使う。"
+  description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。】指定 ID の長期記憶を全文で取得する。search/list で見つけた ID を使い全文が必要な場合に使う。"
 
   input_schema(
     properties: {
@@ -107,7 +108,7 @@ class LongTermMemoryGet < MCP::Tool
 end
 
 class LongTermMemoryDelete < MCP::Tool
-  description "【長期記憶】指定 ID の記憶を削除する"
+  description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。】指定 ID の長期記憶を削除する"
 
   input_schema(
     properties: {
@@ -128,7 +129,7 @@ class LongTermMemoryDelete < MCP::Tool
 end
 
 class LongTermMemoryStats < MCP::Tool
-  description "【長期記憶】記憶 DB の統計情報（総件数・source 別・最古/最新日時）を返す"
+  description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。】長期記憶 DB の統計情報（総件数・source 別・最古/最新日時）を返す"
 
   input_schema(properties: {})
 
