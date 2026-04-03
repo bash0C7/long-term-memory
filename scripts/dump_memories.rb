@@ -18,24 +18,27 @@ module DumpMemories
     db.results_as_hash = true
 
     count = 0
-    File.open(out_path, "w") do |f|
-      db.execute("SELECT content, source, project, tags, created_at FROM memories ORDER BY id").each do |row|
-        tags = begin
-          row["tags"] ? JSON.parse(row["tags"]) : nil
-        rescue JSON::ParserError
-          nil
+    begin
+      File.open(out_path, "w") do |f|
+        db.execute("SELECT content, source, project, tags, created_at FROM memories ORDER BY id").each do |row|
+          tags = begin
+            row["tags"] ? JSON.parse(row["tags"]) : nil
+          rescue JSON::ParserError
+            nil
+          end
+          f.puts JSON.generate({
+            "content"    => row["content"],
+            "source"     => row["source"],
+            "project"    => row["project"],
+            "tags"       => tags,
+            "created_at" => row["created_at"]
+          })
+          count += 1
         end
-        f.puts JSON.generate({
-          "content"    => row["content"],
-          "source"     => row["source"],
-          "project"    => row["project"],
-          "tags"       => tags,
-          "created_at" => row["created_at"]
-        })
-        count += 1
       end
+    ensure
+      db.close
     end
-    db.close
 
     $stdout.puts "dumped: #{out_path} (#{count} records)"
     out_path
