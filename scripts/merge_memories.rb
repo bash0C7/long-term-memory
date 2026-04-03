@@ -34,8 +34,8 @@ module MergeMemories
           tags:    record["tags"]
         )
         line_count += 1
-      rescue JSON::ParserError => e
-        $stderr.puts "skip malformed line: #{e.message}"
+      rescue => e
+        $stderr.puts "skip line: #{e.message}"
       end
 
       after    = store.stats[:total]
