@@ -24,6 +24,7 @@ GEM
       ffi
     power_assert (3.0.1)
     public_suffix (7.0.5)
+    rake (13.3.1)
     sqlite-vec (0.1.8-arm64-darwin)
     sqlite-vec (0.1.8-x86_64-darwin)
     sqlite-vec (0.1.8-x86_64-linux)
@@ -48,6 +49,7 @@ PLATFORMS
 DEPENDENCIES
   informers
   mcp
+  rake
   sqlite-vec
   sqlite3
   test-unit
@@ -67,6 +69,7 @@ CHECKSUMS
   onnxruntime (0.11.1-x86_64-linux) sha256=90a47c9ab70103cdd4dd2b99b5179dfed909b44ceb77a1cf076e9dcff925079c
   power_assert (3.0.1) sha256=8ce9876716cc74e863fcd4cdcdc52d792bd983598d1af3447083a3a9a4d34103
   public_suffix (7.0.5) sha256=1a8bb08f1bbea19228d3bed6e5ed908d1cb4f7c2726d18bd9cadf60bc676f623
+  rake (13.3.1) sha256=8c9e89d09f66a26a01264e7e3480ec0607f0c497a861ef16063604b1b08eb19c
   sqlite-vec (0.1.8-arm64-darwin) sha256=446f4a1137b7cda4e2762b4f1b08d1864e86fdb3da70b6dad3d690108dcaa7c7
   sqlite-vec (0.1.8-x86_64-darwin) sha256=11603640cb4c0631f1037c6eef18a75117763176428bbf5dc37d3fa44b0ff7e2
   sqlite-vec (0.1.8-x86_64-linux) sha256=46e4553406b1142dfda645d8ba3dfcf38c5fbef3733d52c2921af2598fbcfa33
