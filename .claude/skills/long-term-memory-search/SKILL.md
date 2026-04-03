@@ -1,5 +1,5 @@
 ---
-name: memory-search
+name: long-term-memory-search
 description: 長期記憶 DB をハイブリッド検索（FTS5 + ベクトル + RRF + 時間減衰）で照会する
 ---
 

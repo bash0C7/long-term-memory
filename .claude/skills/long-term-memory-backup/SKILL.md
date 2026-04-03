@@ -1,5 +1,5 @@
 ---
-name: memory-backup
+name: long-term-memory-backup
 description: 長期記憶 DB のバックアップ・リストア・古いバックアップの整理
 ---
 

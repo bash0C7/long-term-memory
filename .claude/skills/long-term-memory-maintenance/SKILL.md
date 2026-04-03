@@ -1,5 +1,5 @@
 ---
-name: memory-maintenance
+name: long-term-memory-maintenance
 description: Long-term memory DB のメンテナンス操作（統計確認・一覧・削除・埋め込み再構築・ディレクトリ一括取り込み）
 ---
 

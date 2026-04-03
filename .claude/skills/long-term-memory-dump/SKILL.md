@@ -1,5 +1,5 @@
 ---
-name: memory-dump
+name: long-term-memory-dump
 description: 長期記憶 DB を iCloud Drive へ NDJSON dump する
 ---
 

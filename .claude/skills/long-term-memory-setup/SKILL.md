@@ -1,5 +1,5 @@
 ---
-name: setup
+name: long-term-memory-setup
 description: long-term-memory のセットアップ手順を案内し、gems インストール・テスト・Claude Code/Desktop への MCP 登録を行う
 ---
 

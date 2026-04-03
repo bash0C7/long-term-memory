@@ -1,5 +1,5 @@
 ---
-name: rebuild-embeddings
+name: long-term-memory-rebuild-embeddings
 description: 埋め込みモデル変更後に全レコードのベクトルを再構築する
 ---
 

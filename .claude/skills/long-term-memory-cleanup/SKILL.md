@@ -1,5 +1,5 @@
 ---
-name: memory-cleanup
+name: long-term-memory-cleanup
 description: 不要な記憶の特定と削除。古い・重複・低品質なエントリを整理する
 ---
 

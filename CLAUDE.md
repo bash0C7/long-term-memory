@@ -142,15 +142,15 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 
 `.claude/skills/` に以下を用意（すべて `long-term-memory-` prefix 付き）:
 
-| スキル（呼び出し名） | ファイル名 | 用途 |
+| スキル（呼び出し名） | ディレクトリ名 | 用途 |
 |---|---|---|
-| `/setup` | `long-term-memory-setup.md` | gems インストール・テスト・MCP 登録 |
-| `/ingest-vault` | `long-term-memory-ingest-vault.md` | ディレクトリ一括取り込み |
-| `/memory-search` | `long-term-memory-search.md` | 検索・スコア確認 |
-| `/memory-cleanup` | `long-term-memory-cleanup.md` | 不要記憶削除ワークフロー |
-| `/memory-backup` | `long-term-memory-backup.md` | バックアップ・リストア |
-| `/rebuild-embeddings` | `long-term-memory-rebuild-embeddings.md` | モデル変更後の再ベクトル化 |
-| `/memory-stats` | `long-term-memory-stats.md` | 統計・健全性チェック |
-| `/memory-dump` | `long-term-memory-dump.md` | 複数Mac同期用 iCloud へ NDJSON dump |
-| `/memory-sync` | `long-term-memory-sync.md` | 複数Mac同期用 iCloud dump を取り込み |
-| `/memory-maintenance` | `long-term-memory-maintenance.md` | 全操作リファレンス |
+| `/long-term-memory-setup` | `long-term-memory-setup/` | gems インストール・テスト・MCP 登録 |
+| `/long-term-memory-ingest-vault` | `long-term-memory-ingest-vault/` | ディレクトリ一括取り込み |
+| `/long-term-memory-search` | `long-term-memory-search/` | 検索・スコア確認 |
+| `/long-term-memory-cleanup` | `long-term-memory-cleanup/` | 不要記憶削除ワークフロー |
+| `/long-term-memory-backup` | `long-term-memory-backup/` | バックアップ・リストア |
+| `/long-term-memory-rebuild-embeddings` | `long-term-memory-rebuild-embeddings/` | モデル変更後の再ベクトル化 |
+| `/long-term-memory-stats` | `long-term-memory-stats/` | 統計・健全性チェック |
+| `/long-term-memory-dump` | `long-term-memory-dump/` | 複数Mac同期用 iCloud へ NDJSON dump |
+| `/long-term-memory-sync` | `long-term-memory-sync/` | 複数Mac同期用 iCloud dump を取り込み |
+| `/long-term-memory-maintenance` | `long-term-memory-maintenance/` | 全操作リファレンス |

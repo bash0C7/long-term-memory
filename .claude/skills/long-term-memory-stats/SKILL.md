@@ -1,5 +1,5 @@
 ---
-name: memory-stats
+name: long-term-memory-stats
 description: 長期記憶 DB の統計・健全性チェック・チューニング確認
 ---
 

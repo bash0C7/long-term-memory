@@ -1,5 +1,5 @@
 ---
-name: ingest-vault
+name: long-term-memory-ingest-vault
 description: ディレクトリ（Obsidian vault・コードリポジトリ等）を長期記憶 DB に一括取り込みする
 ---
 

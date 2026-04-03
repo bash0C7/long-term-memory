@@ -1,5 +1,5 @@
 ---
-name: memory-sync
+name: long-term-memory-sync
 description: iCloud Drive 上の全 Mac dump を取り込んで長期記憶を同期する
 ---
 
