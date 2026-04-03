@@ -65,6 +65,21 @@ store.close
 "
 ```
 
+## 記憶類似分析（重複・ノイズ検出）
+
+ベクトル類似度を使って重複・類似グループを検出する。読み取り専用、DB変更なし。
+
+```bash
+bundle exec ruby scripts/analyze_memories.rb
+```
+
+オプション:
+- `--threshold FLOAT`  類似度しきい値 (default: 0.95、高いほど厳しい)
+- `--limit N`          表示グループ数上限 (default: 30)
+
+分析結果をClaudeに見せると矛盾・削除候補を判断してもらえる。
+削除確定後は上記「記憶を削除」セクションで実行。
+
 ## ディレクトリ一括取り込み
 
 ```bash
