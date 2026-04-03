@@ -6,37 +6,6 @@ require "embedder"
 
 DB_PATH = File.expand_path("../../db/memory.db", __FILE__).freeze
 
-class LongTermMemorySearch < MCP::Tool
-  description <<~DESC
-    【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。一般的な記憶・永続記憶・CLAUDE.md 想起には使わない。】
-    ハイブリッド検索（FTS5全文一致 + ベクトル意味検索 + RRF融合）で長期記憶DBを照会する。
-    query に scope ワード（"obsidian", "claude_code" など）やプロジェクト名を含めると絞り込みが効く。
-    結果は summary と keywords を返す。全文が必要な場合は long_term_memory_get を使う。
-  DESC
-
-  input_schema(
-    properties: {
-      query:   { type: "string",  description: "検索クエリ" },
-      scope:   { type: "string",  description: "source 絞り込み: claude_code | claude_desktop | obsidian" },
-      project: { type: "string",  description: "プロジェクト名絞り込み" },
-      limit:   { type: "integer", description: "最大件数（デフォルト 5）" }
-    },
-    required: ["query"]
-  )
-
-  class << self
-    def call(query:, scope: nil, project: nil, limit: 5, server_context:)
-      return MCP::Tool::Response.new([{ type: "text", text: '{"error":"query is required"}' }], error: true) if query.to_s.strip.empty?
-
-      store   = server_context[:memory_store]
-      results = store.search(query: query, scope: scope, project: project, limit: limit)
-      MCP::Tool::Response.new([{ type: "text", text: JSON.pretty_generate(results) }])
-    rescue => e
-      MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: e.message }) }], error: true)
-    end
-  end
-end
-
 class LongTermMemoryStore < MCP::Tool
   description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。一般的な記憶保存・永続記憶には使わない。】記憶を長期記憶DBに保存する（Claude Desktop からの手動保存用）。summary と keywords を自動生成する。"
 
@@ -55,52 +24,6 @@ class LongTermMemoryStore < MCP::Tool
       store = server_context[:memory_store]
       id    = store.store(content: content, source: source, project: project, tags: tags)
       MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ id: id, status: "stored" }) }])
-    rescue => e
-      MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: e.message }) }], error: true)
-    end
-  end
-end
-
-class LongTermMemoryList < MCP::Tool
-  description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。】最近の長期記憶を一覧表示する。summary と keywords を返す。"
-
-  input_schema(
-    properties: {
-      scope:   { type: "string",  description: "source 絞り込み（省略可）" },
-      project: { type: "string",  description: "プロジェクト絞り込み（省略可）" },
-      limit:   { type: "integer", description: "最大件数（デフォルト 20）" }
-    }
-  )
-
-  class << self
-    def call(scope: nil, project: nil, limit: 20, server_context:)
-      store   = server_context[:memory_store]
-      results = store.list(scope: scope, project: project, limit: limit)
-      MCP::Tool::Response.new([{ type: "text", text: JSON.pretty_generate(results) }])
-    rescue => e
-      MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: e.message }) }], error: true)
-    end
-  end
-end
-
-class LongTermMemoryGet < MCP::Tool
-  description "【専用ツール: long-term-memory / 長期記憶 / LongMemory / LongTermMemory と明示的に指定された場合のみ使用すること。】指定 ID の長期記憶を全文で取得する。search/list で見つけた ID を使い全文が必要な場合に使う。"
-
-  input_schema(
-    properties: {
-      id: { type: "integer", description: "取得する記憶の ID" }
-    },
-    required: ["id"]
-  )
-
-  class << self
-    def call(id:, server_context:)
-      store  = server_context[:memory_store]
-      result = store.get(id)
-      if result.nil?
-        return MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: "not found: id=#{id}" }) }], error: true)
-      end
-      MCP::Tool::Response.new([{ type: "text", text: JSON.pretty_generate(result) }])
     rescue => e
       MCP::Tool::Response.new([{ type: "text", text: JSON.generate({ error: e.message }) }], error: true)
     end
@@ -147,13 +70,10 @@ end
 if __FILE__ == $0
   store  = MemoryStore.new(DB_PATH)
   server = MCP::Server.new(
-    name: "long-term-memory",
+    name:    "long-term-memory",
     version: "1.0.0",
-    tools: [
-      LongTermMemorySearch,
+    tools:   [
       LongTermMemoryStore,
-      LongTermMemoryList,
-      LongTermMemoryGet,
       LongTermMemoryDelete,
       LongTermMemoryStats
     ],
