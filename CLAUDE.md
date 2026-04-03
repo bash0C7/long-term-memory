@@ -118,7 +118,7 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 |---|---|
 | `lib/embedder.rb` | informers ONNX パイプライン、`embed(text)` |
 | `lib/memory_store.rb` | DB 初期化・store / search / list / delete / stats |
-| `scripts/mcp_server.rb` | MCP サーバー 5ツール定義 + 起動エントリポイント |
+| `scripts/mcp_server.rb` | MCP サーバー 3ツール定義（Store/Delete/Stats）+ 起動エントリポイント。読み取りは chiebukuro-mcp 経由 |
 | `scripts/start_mcp.sh` | Claude Desktop 用起動スクリプト（rbenv 絶対パス） |
 | `scripts/capture_session.rb` | Claude Code Stop hook ハンドラ（JSONL transcript → DB） |
 | `scripts/capture_tool_use.rb` | Claude Code PostToolUse hook ハンドラ（Edit/Write/Bash/WebFetch/WebSearch をキャプチャ） |
