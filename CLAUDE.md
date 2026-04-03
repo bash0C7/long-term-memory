@@ -155,3 +155,4 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 | `/long-term-memory-dump` | `long-term-memory-dump/` | 複数Mac同期用 iCloud へ NDJSON dump |
 | `/long-term-memory-sync` | `long-term-memory-sync/` | 複数Mac同期用 iCloud dump を取り込み |
 | `/long-term-memory-maintenance` | `long-term-memory-maintenance/` | 全操作リファレンス |
+| `/long-term-memory-register` | `long-term-memory-register/` | 新 Mac セットアップ — hooks・MCP 登録 |
