@@ -9,6 +9,7 @@ module CaptureToolUse
   DB_PATH = File.expand_path("../../db/memory.db", __FILE__).freeze
   CURL_PATTERN = /\b(curl|wget)\b/
   MAX_CONTENT_LENGTH = 4000
+  MIN_CONTENT_LENGTH = 200
 
   def self.run(json_str, store: nil)
     data = JSON.parse(json_str)
@@ -33,7 +34,7 @@ module CaptureToolUse
   end
 
   def self.build_content(tool_name, tool_input, tool_response)
-    case tool_name
+    result = case tool_name
     when "Edit"
       file_path = tool_input["file_path"]
       old_str   = tool_input["old_string"].to_s
@@ -57,6 +58,8 @@ module CaptureToolUse
       output = extract_text(tool_response).slice(0, MAX_CONTENT_LENGTH)
       "[WebSearch] #{query}\n#{output}"
     end
+    return nil if result.nil? || result.length < MIN_CONTENT_LENGTH
+    result
   end
 
   def self.extract_text(response)
