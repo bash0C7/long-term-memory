@@ -43,54 +43,17 @@ hooks がすでに設定されている場合は Step 4 をスキップ。
 
 ## Step 4: hooks を追記（未設定の場合のみ）
 
+hooks の正確な JSON 構成・設定確認・テストは `/long-term-memory-hooks` スキルを参照。
+
 ```bash
 SETTINGS="$HOME/.claude/settings.local.json"
 LTM="/Users/bash/dev/src/github.com/bash0C7/long-term-memory"
 
-# 既存JSONに long-term-memory hooks をマージ（既存の他設定は保持）
-EXISTING=$(cat "$SETTINGS")
-
 # Stop hook が未設定かチェック
-if echo "$EXISTING" | jq -e '.hooks.Stop' > /dev/null 2>&1; then
+if cat "$SETTINGS" | jq -e '.hooks.Stop' > /dev/null 2>&1; then
   echo "Stop hook はすでに設定済み。スキップ。"
 else
-  jq --arg ltm "$LTM" '
-    .hooks.Stop += [{
-      "hooks": [{
-        "type": "command",
-        "command": ("cd " + $ltm + " && bundle exec ruby scripts/capture_session.rb"),
-        "async": true
-      }]
-    }]
-    |
-    .hooks.PostToolUse += [{
-      "matcher": "Edit|Write|Bash|WebFetch|WebSearch",
-      "hooks": [{
-        "type": "command",
-        "command": ("cd " + $ltm + " && bundle exec ruby scripts/capture_tool_use.rb"),
-        "async": true
-      }]
-    }]
-    |
-    .hooks.PreToolUse += [
-      {
-        "hooks": [{
-          "type": "command",
-          "command": "jq -c --arg t \"$(TZ=Asia/Tokyo date \"+%Y-%m-%d %H:%M:%S JST\")\" \"{time: \\$t, tool: .tool_name, summary: (.tool_input | .command // .file_path // .pattern // .path // .prompt // \\\"?\\\")}\" >> ~/.claude/tool-log.jsonl 2>/dev/null || true",
-          "async": true
-        }]
-      },
-      {
-        "matcher": "Skill",
-        "hooks": [{
-          "type": "command",
-          "command": ("cd " + $ltm + " && bundle exec ruby scripts/skill_context.rb"),
-          "async": false
-        }]
-      }
-    ]
-  ' "$SETTINGS" > /tmp/settings_merged.json && mv /tmp/settings_merged.json "$SETTINGS"
-  echo "hooks を登録しました。"
+  echo "hooks が未設定。/long-term-memory-hooks スキルの設定 JSON をもとに登録してください。"
 fi
 ```
 
@@ -138,3 +101,41 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq '.mcpS
 
 - **Claude Code** を再起動 → 新スキル（`/long-term-memory-*`）がタブ補完に出る
 - **Claude Desktop** を再起動 → MCP ツールが利用可能になる
+
+---
+
+## トラブルシューティング
+
+### MCP が接続されない
+
+1. `scripts/start_mcp.sh` の rbenv パスが正しいか確認:
+   ```bash
+   head -3 scripts/start_mcp.sh
+   ```
+2. スクリプトに実行権限があるか確認:
+   ```bash
+   ls -l scripts/start_mcp.sh
+   # 実行権限がなければ: chmod +x scripts/start_mcp.sh
+   ```
+3. 手動で起動してエラーを確認:
+   ```bash
+   echo '{}' | scripts/start_mcp.sh
+   ```
+
+### DB の状態確認（ONNX ロードなし）
+
+```ruby
+require_relative 'lib/memory_store'
+class StubEmbedder
+  VECTOR_SIZE = 768
+  def embed(t); [0.0] * 768; end
+end
+store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
+stats = store.stats
+puts "総記憶数: #{stats[:total]}"
+stats[:by_source].each { |src, cnt| puts "  #{src}: #{cnt}" }
+store.close
+```
+
+**注意:** `command` は `bundle exec ruby` ではなく `start_mcp.sh` の絶対パスを使う。
+`bundle exec` では PATH 解決に失敗して MCP が接続されないことがある。
