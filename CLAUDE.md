@@ -145,6 +145,7 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 | スキル（呼び出し名） | ディレクトリ名 | 用途 |
 |---|---|---|
 | `/long-term-memory-setup` | `long-term-memory-setup/` | gems インストール・テスト・MCP 登録 |
+| `/long-term-memory-hooks` | `long-term-memory-hooks/` | hook 登録・確認・テスト |
 | `/long-term-memory-ingest-vault` | `long-term-memory-ingest-vault/` | ディレクトリ一括取り込み |
 | `/long-term-memory-search` | `long-term-memory-search/` | 検索・スコア確認 |
 | `/long-term-memory-cleanup` | `long-term-memory-cleanup/` | 不要記憶削除ワークフロー |

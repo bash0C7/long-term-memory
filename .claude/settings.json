@@ -1,11 +1,7 @@
 {
-  "hooks": {
-    "Stop": [{
-      "matcher": "",
-      "hooks": [{
-        "type": "command",
-        "command": "cd /Users/bash/dev/src/github.com/bash0C7/long-term-memory && bundle exec ruby scripts/capture_session.rb"
-      }]
-    }]
+  "mcpServers": {
+    "long-term-memory": {
+      "command": "/Users/bash/dev/src/github.com/bash0C7/long-term-memory/scripts/start_mcp.sh"
+    }
   }
 }
