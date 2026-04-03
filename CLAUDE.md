@@ -151,4 +151,6 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 | `/memory-backup` | `long-term-memory-backup.md` | バックアップ・リストア |
 | `/rebuild-embeddings` | `long-term-memory-rebuild-embeddings.md` | モデル変更後の再ベクトル化 |
 | `/memory-stats` | `long-term-memory-stats.md` | 統計・健全性チェック |
+| `/memory-dump` | `long-term-memory-dump.md` | 複数Mac同期用 iCloud へ NDJSON dump |
+| `/memory-sync` | `long-term-memory-sync.md` | 複数Mac同期用 iCloud dump を取り込み |
 | `/memory-maintenance` | `long-term-memory-maintenance.md` | 全操作リファレンス |
