@@ -77,4 +77,26 @@ class TestCaptureSession < Test::Unit::TestCase
     # Should not raise
     assert_nothing_raised { CaptureSession.run(input, store: @store) }
   end
+
+  def test_build_content_filters_system_messages
+    messages = [
+      { "role" => "system", "content" => "/remote-control is active. Code in CLI or at https://claude.ai/code/session_abc" },
+      { "role" => "user",   "content" => "Rubyのテスト書いて" },
+      { "role" => "assistant", "content" => "はい、書きます" }
+    ]
+    result = CaptureSession.build_content(messages)
+    assert_not_nil result
+    assert_not_include result, "/remote-control"
+    assert_include result, "Rubyのテスト書いて"
+    assert_include result, "はい、書きます"
+  end
+
+  def test_build_content_returns_nil_when_only_system_messages
+    messages = [
+      { "role" => "system", "content" => "/remote-control is active" },
+      { "role" => "unknown", "content" => "some system noise" }
+    ]
+    result = CaptureSession.build_content(messages)
+    assert_nil result
+  end
 end

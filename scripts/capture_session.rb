@@ -35,8 +35,10 @@ module CaptureSession
   end
 
   def self.build_content(messages)
-    messages.map do |msg|
-      role = msg["role"] || "unknown"
+    filtered = messages.select { |msg| msg["role"] == "user" || msg["role"] == "assistant" }
+    return nil if filtered.empty?
+    filtered.map do |msg|
+      role = msg["role"]
       content = msg["content"].is_a?(String) ? msg["content"] : msg["content"].to_s
       "[#{role}] #{content}"
     end.join("\n")
@@ -48,7 +50,7 @@ module CaptureSession
     return if messages.empty?
 
     content = build_content(messages)
-    return if content.strip.empty?
+    return if content.nil? || content.strip.empty?
 
     store ||= MemoryStore.new(DB_PATH)
     store.store(
