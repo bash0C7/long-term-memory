@@ -15,7 +15,7 @@ iCloud Drive 上の各 Mac の最新 NDJSON dump を読み込み、本 Mac の D
 ## dump 対象ファイルを確認
 
 ```bash
-ls -lh "/Users/bash/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump/"
+ls -lh "/Users/bash/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump/long-term-memory/"
 ```
 
 ## sync 実行

@@ -3,7 +3,7 @@ require "json"
 require "memory_store"
 
 module MergeMemories
-  DUMP_DIR = File.expand_path("~/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump").freeze
+  DUMP_DIR = File.expand_path("~/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump/long-term-memory").freeze
   DB_PATH  = File.expand_path("../../db/memory.db", __FILE__).freeze
 
   def self.run(dump_dir: DUMP_DIR, db_path: DB_PATH, store: nil)

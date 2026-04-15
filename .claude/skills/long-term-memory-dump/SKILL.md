@@ -18,7 +18,7 @@ bundle exec ruby scripts/dump_memories.rb
 ## 出力先確認
 
 ```bash
-ls -lh "/Users/bash/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump/"
+ls -lh "/Users/bash/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump/long-term-memory/"
 ```
 
 ## 次のステップ

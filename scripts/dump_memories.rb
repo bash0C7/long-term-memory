@@ -5,7 +5,7 @@ require "fileutils"
 require "sqlite3"
 
 module DumpMemories
-  DUMP_DIR = File.expand_path("~/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump").freeze
+  DUMP_DIR = File.expand_path("~/Library/Mobile Documents/com~apple~CloudDocs/chiebukuro-mcp/dump/long-term-memory").freeze
   DB_PATH  = File.expand_path("../../db/memory.db", __FILE__).freeze
 
   def self.run(db_path: DB_PATH, dump_dir: DUMP_DIR)
