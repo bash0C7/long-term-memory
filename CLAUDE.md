@@ -120,9 +120,6 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 | `lib/memory_store.rb` | DB 初期化・store / search / list / delete / stats |
 | `scripts/mcp_server.rb` | MCP サーバー 3ツール定義（Store/Delete/Stats）+ 起動エントリポイント。読み取りは chiebukuro-mcp 経由 |
 | `scripts/start_mcp.sh` | Claude Desktop 用起動スクリプト（rbenv 絶対パス） |
-| `scripts/capture_session.rb` | Claude Code Stop hook ハンドラ（JSONL transcript → DB） |
-| `scripts/capture_tool_use.rb` | Claude Code PostToolUse hook ハンドラ（Edit/Write/Bash/WebFetch/WebSearch をキャプチャ） |
-| `scripts/skill_context.rb` | PreToolUse hook — Skill 呼び出し前にスキル名で記憶検索してコンテキスト注入 |
 | `scripts/ingest_directory.rb` | ディレクトリ一括取り込み CLI |
 | `scripts/rebuild_embeddings.rb` | 全レコード再ベクトル化 |
 | `test/test_helper.rb` | StubEmbedder（位置重み付きハッシュ、決定論的ベクトル） |
@@ -131,10 +128,9 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 
 ## 設定ファイル
 
-- `.claude/settings.json` — Stop hook（capture_session.rb）設定済み
-- `dotfiles の settings.local.json` — PreToolUse Skill hook（skill_context.rb）設定済み
-- `.mcp.json` — Claude Code 向け MCP サーバー設定（`start_mcp.sh` 経由）
+- `.claude/settings.json` — プロジェクト MCP サーバー登録（`start_mcp.sh` 経由）
 - `~/Library/Application Support/Claude/claude_desktop_config.json` — Claude Desktop 向け MCP サーバー登録済み（`start_mcp.sh` 経由）
+- hook は **登録しない方針**（保存は MCP ツール経由で明示的に行う）
 
 ---
 
@@ -144,8 +140,6 @@ store = MemoryStore.new('db/memory.db', embedder: StubEmbedder.new)
 
 | スキル（呼び出し名） | ディレクトリ名 | 用途 |
 |---|---|---|
-| `/long-term-memory-setup` | `long-term-memory-setup/` | gems インストール・テスト・MCP 登録 |
-| `/long-term-memory-hooks` | `long-term-memory-hooks/` | hook 登録・確認・テスト |
 | `/long-term-memory-ingest-vault` | `long-term-memory-ingest-vault/` | ディレクトリ一括取り込み |
 | `/long-term-memory-search` | `long-term-memory-search/` | 検索・スコア確認 |
 | `/long-term-memory-cleanup` | `long-term-memory-cleanup/` | 不要記憶削除ワークフロー |

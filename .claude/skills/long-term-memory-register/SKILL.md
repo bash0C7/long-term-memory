@@ -1,11 +1,13 @@
 ---
 name: long-term-memory-register
-description: 新しい Mac に long-term-memory の hooks と MCP を登録する。git pull 後に実行する。
+description: 新しい Mac に long-term-memory の MCP を登録する。git pull 後に実行する。
 ---
 
 # long-term-memory 登録セットアップ
 
 新しい Mac または環境再セットアップ時に実行する。`git pull` 後に叩けば OK。
+
+long-term-memory は **hook を登録しない方針**（保存は MCP ツール経由で明示的に行う）。登録対象は MCP サーバーのみ。
 
 ## Step 1: gems インストール
 
@@ -17,47 +19,10 @@ bundle install
 ## Step 2: テスト確認
 
 ```bash
-bundle exec ruby test/test_capture_session.rb 2>/dev/null
-bundle exec ruby test/test_capture_tool_use.rb 2>/dev/null
 bundle exec ruby test/test_memory_store.rb 2>/dev/null
 ```
 
-## Step 3: ~/.claude/settings.local.json に hooks を登録
-
-既存の設定を壊さずに long-term-memory の hooks だけをマージする。
-
-```bash
-SETTINGS="$HOME/.claude/settings.local.json"
-LTM="/Users/bash/dev/src/github.com/bash0C7/long-term-memory"
-
-# ファイルがなければ空オブジェクトで初期化
-[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
-
-# 現在の内容を確認
-echo "=== 現在の hooks ==="
-cat "$SETTINGS" | jq '.hooks // "なし"'
-```
-
-hooks がすでに設定されている場合は Step 4 をスキップ。
-**なし** または long-term-memory の hooks がない場合は Step 4 を実行。
-
-## Step 4: hooks を追記（未設定の場合のみ）
-
-hooks の正確な JSON 構成・設定確認・テストは `/long-term-memory-hooks` スキルを参照。
-
-```bash
-SETTINGS="$HOME/.claude/settings.local.json"
-LTM="/Users/bash/dev/src/github.com/bash0C7/long-term-memory"
-
-# Stop hook が未設定かチェック
-if cat "$SETTINGS" | jq -e '.hooks.Stop' > /dev/null 2>&1; then
-  echo "Stop hook はすでに設定済み。スキップ。"
-else
-  echo "hooks が未設定。/long-term-memory-hooks スキルの設定 JSON をもとに登録してください。"
-fi
-```
-
-## Step 5: Claude Desktop MCP を登録
+## Step 3: Claude Desktop MCP を登録
 
 ```bash
 DESKTOP_CONFIG="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
@@ -77,7 +42,7 @@ else
 fi
 ```
 
-## Step 6: Claude Code MCP 確認
+## Step 4: Claude Code MCP 確認
 
 `.claude/settings.json`（プロジェクト）に `mcpServers` が含まれているか確認:
 
@@ -87,12 +52,9 @@ cat /Users/bash/dev/src/github.com/bash0C7/long-term-memory/.claude/settings.jso
 
 `long-term-memory` の `mcpServers` エントリがあれば OK。
 
-## Step 7: 登録確認
+## Step 5: 登録確認
 
 ```bash
-echo "=== hooks 登録状態 ==="
-cat ~/.claude/settings.local.json | jq '.hooks | keys'
-
 echo "=== Claude Desktop MCP ==="
 cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq '.mcpServers | keys'
 ```
