@@ -1,7 +1,7 @@
 # Gemfile
 source "https://rubygems.org"
 
-ruby "4.0.1"
+ruby "4.0.4"
 
 gem "sqlite3"
 gem "sqlite-vec"

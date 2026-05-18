@@ -84,7 +84,7 @@ CHECKSUMS
   tokenizers (0.6.3-x86_64-linux-musl) sha256=a4b08c53bf0c8f7674c3abd03e013f0bb7c0c2457174b116c2872a37c64f0297
 
 RUBY VERSION
-  ruby 4.0.1
+  ruby 4.0.4
 
 BUNDLED WITH
   4.0.3
